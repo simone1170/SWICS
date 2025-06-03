@@ -1,0 +1,62 @@
+component_actions = {               # Actions to be performed by this script
+    'simulate' : True,
+    'transcribe' : False,
+    'train' : False,
+    'run' : False,
+    'evaluate' : False,             # Plot performance of IIDS
+    'plot' : False,                   # Plot metrics from physical process
+    'commit' : False
+}
+
+ids_config = """
+{
+    "InterArrivalTimeMean": {
+        "N": 6,
+        "W": 10,
+        "_type": "InterArrivalTimeMean",
+        "model-file": "model_file_location"
+    }
+}
+"""
+
+# Default parameter values. Unless a scenario specifies own parameters these are used
+
+# Not inlcuded: createlogfiles, logPcap, outputPath, attackNumber, attackInterval, loggingLevel, loggingGroup, 
+# includeLoggingComponents, excludeLoggingComponents, runAttacks (replaced by attackName and attackSchedule)
+
+# Additionally: namingConvention, attackSchedule (list of start and endtimes of attacks) and
+# attackName (name of the attack expected by sim, default will be the dict key of the attack dict)
+
+wired_config = {
+    'use5g' : 'false',
+    'duration' : 5,
+    'attackSchedule' : [(2,3)],
+    'attackName' : '', # Default: Name of the dict key
+    'jammerInside' : 'false',
+    'jammerDirected' : 'false',
+    'jammerPower' : 0,
+    'bjp' : 0,
+    'dutyCycle' : 1
+}
+
+wireless_config = wired_config.copy()
+wireless_config.update({'use5g' : 'true'})
+
+# directed_config = wireless_config.copy()
+# directed_config.update({'jammerDirected' : 'true'})
+
+# Attacks and their respective config
+# Missing entries will be filled in by default config
+
+general_attacks = {
+    'SpectrumAnalysis' : {},
+}
+
+
+# Format: <scenario_name> : ({<parameter> : <value_list>}, attack_dict, default_config)
+# => For scenario_name vary the parameter for all values from value_list
+#    For each parameter value execute all attacks from attack_dict with their respective attack config
+
+scenarios = {
+    '5G' : ({}, general_attacks, wireless_config),
+}
