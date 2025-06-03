@@ -48,8 +48,8 @@ ns3_path = ''
 time = datetime.now().strftime("%Y-%m-%d %H:%M:%S").replace(" ", "-")
 time = "2025-05-23-18:09:51"
 
-outputDirectory = f"../dataset/new-sim-run-{time}{config.description}/"
-ns3_path = '../ns-3-mmwave-nyu/build/test_testbed'
+outputDirectory = f"../dataset/new-sim-run-{time}/"
+ns3_path = '../simulation/build/test_testbed'
 
 
 plot_columns = ['conveyorBeltEngineActualSpeed', 'waterSpillDetected']      # Synopsis plot is created for each column name
