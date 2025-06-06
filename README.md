@@ -53,7 +53,7 @@ Lastly, to give an broad overview of the performance of the physical process, we
 The resulting synopsis is saved as a png in the new subdirectory in /dataset/.
 
 ## Transciption
-To transcribe and run IIDSs on the pcaps obtained from the simulation a distribution of IPAL is required: https://github.com/fkie-cad/IPAL/tree/main
+To transcribe and run IIDSs on the pcaps obtained from the simulation a distribution of IPAL is required: https://github.com/fkie-cad/IPAL
 We recommend cloning the following repositories into /IPAL/docker and installing the requirements as virtual environments:
 1. https://github.com/fkie-cad/ipal_ids_framework
 2. https://github.com/fkie-cad/ipal_transcriber
