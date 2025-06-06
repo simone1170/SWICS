@@ -1,9 +1,9 @@
 component_actions = {               # Actions to be performed by this script
     'simulate' : True,
-    'transcribe' : True,
-    'train' : True,
-    'run' : True,
-    'evaluate' : True,             # Plot performance of IIDS
+    'transcribe' : False,
+    'train' : False,
+    'run' : False,
+    'evaluate' : False,             # Plot performance of IIDS
     'plot' : True,                   # Plot metrics from physical process
 }
 

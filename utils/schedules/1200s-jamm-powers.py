@@ -4,8 +4,7 @@ component_actions = {               # Actions to be performed by this script
     'train' : False,
     'run' : False,
     'evaluate' : False,             # Plot performance of IIDS
-    'plot' : False,                   # Plot metrics from physical process
-    'commit' : True
+    'plot' : True,                   # Plot metrics from physical process
 }
 
 ids_config = """
