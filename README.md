@@ -65,4 +65,3 @@ The result is safed in the respective ipal-transcribe files and automatically co
 Additionally we train and IAT IIDS on the respective baseline scenarion and run that IIDS on the attack scenarios.
 Different IIDSs and configurations can be used by modifying the ids_config string in the respective schedule. 
 The performance of the IIDS is plotted in the ids-plot.pdf files.
-
