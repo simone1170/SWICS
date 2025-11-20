@@ -2,7 +2,7 @@
 
 ## Overview
 This repository contains the following:
-1. /dataset.tar-xz - the simulation data used for the plots in the paper. We conduct one simulation run to test out all implemented attacks and a second one to more closely study the impact of jamming on the physical process. 
+1. /dataset.zip - simulation data and other datasets used for in the paper. We conduct one simulation run to test out all implemented attacks and a second one to more closely study the impact of jamming on the physical process. 
 2. /simulation/ - a modified ns-3 distribution that contains various additions, including the mmWave, nyu-sim, jamming and testbed modules
 3. /utils/ - various scripts used for the installation, running and evaluation of simulations 
 
