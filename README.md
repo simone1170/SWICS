@@ -1,5 +1,7 @@
 # SWICS
 
+Upon acceptance of the corresponding paper, we will make the code and the raw data of this anonymous repository freely and publicly available.
+
 ## Overview
 This repository contains the following:
 1. /dataset.zip - simulation data and other datasets used for in the paper. We conduct one simulation run to test out all implemented attacks and a second one to more closely study the impact of jamming on the physical process. 
