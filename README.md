@@ -1,12 +1,12 @@
 # SWICS
 
-Upon acceptance of the corresponding paper, we will make the code and the raw data of this anonymous repository freely and publicly available.
+SWICS is a virtual testbed combining a physical industrial process and 5G mmWave communication simulated in the ns-3 framework.
 
 ## Overview
 This repository contains the following:
-1. /dataset.zip - simulation data and other datasets used for in the paper. We conduct one simulation run to test out all implemented attacks and a second one to more closely study the impact of jamming on the physical process. 
-2. /simulation/ - a modified ns-3 distribution that contains various additions, including the mmWave, nyu-sim, jamming and testbed modules
-3. /utils/ - various scripts used for the installation, running and evaluation of simulations 
+
+1. /simulation/ - a modified ns-3 distribution that contains various additions, including the mmWave, nyu-sim, jamming and testbed modules
+2. /utils/ - various scripts used for the installation, running and evaluation of simulations 
 
 ## Installation
 For easy installation we provide a small script:
@@ -67,3 +67,14 @@ The result is safed in the respective ipal-transcribe files and automatically co
 Additionally we train and IAT IIDS on the respective baseline scenarion and run that IIDS on the attack scenarios.
 Different IIDSs and configurations can be used by modifying the ids_config string in the respective schedule. 
 The performance of the IIDS is plotted in the ids-plot.pdf files.
+
+## Citing our work
+
+If you want to refer to SWICS in your publication, please cite our **paper** instead of this repository.
+
+````
+@inproceedings{lenz2025swics,
+author = {Lenz, Stefan and Michaelides, Sotiris and Rickert, Moritz and Holtwick, Jonas and Henze, Martin},
+title = {{Security Implications of 5G Communication in Industrial Systems}},
+booktitle = {Proceedings of the 12th ACM Cyber-Physical System Security Workshop (CPSS 2026)},
+````
