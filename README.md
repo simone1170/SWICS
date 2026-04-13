@@ -73,7 +73,7 @@ The performance of the IIDS is plotted in the ids-plot.pdf files.
 If you want to refer to SWICS in your publication, please cite our **paper** instead of this repository.
 
 ````
-@inproceedings{lenz2025swics,
+@inproceedings{MichaelidesLenz2026swics,
 author = {Lenz, Stefan and Michaelides, Sotiris and Rickert, Moritz and Holtwick, Jonas and Henze, Martin},
 title = {{Security Implications of 5G Communication in Industrial Systems}},
 booktitle = {Proceedings of the 12th ACM Cyber-Physical System Security Workshop (CPSS 2026)},
