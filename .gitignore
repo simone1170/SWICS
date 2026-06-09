@@ -1,0 +1,7 @@
+dataset/
+utils/venv/
+simulation/build/
+simulation/cmake-cache/
+simulation/.lock-ns3*
+build.log
+__pycache__/
