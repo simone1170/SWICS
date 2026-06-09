@@ -26,24 +26,18 @@ for a in attacks:
         print(f"[skip] {f} missing")
         continue
     df = pd.read_csv(f, sep="\t")
-    # type column: 0 == DL data (CTRL/DATA enum); keep DL data TBs, new transmissions only
-    df = df[df["retxNum"] == 0]
+    # type: 0 == DATA, 2 == CTRL. Keep DATA allocations to real UEs (rnti>0), new TX only.
+    df = df[(df["type"] == 0) & (df["rnti"] > 0) & (df["retxNum"] == 0)]
     if target_rnti is not None:
         df = df[df["rnti"] == target_rnti]
-    else:
-        # pick the busiest RNTI (the data-bearing UE)
-        if not df.empty:
-            target_rnti = df["rnti"].value_counts().idxmax()
-            df = df[df["rnti"] == target_rnti]
     df = df.sort_values("time")
     win = df[(df["time"] >= WIN[0]) & (df["time"] <= WIN[1])]
     mean_mcs = win["mcs"].mean() if not win.empty else float("nan")
-    summary.append((a, target_rnti, len(df), mean_mcs))
-    # rolling median trend over time
-    ax.plot(df["time"], df["mcs"], alpha=0.12, lw=0.6,
-            label=f"_{a} raw")
-    trend = df.set_index("time")["mcs"].rolling(200, min_periods=1).median()
-    ax.plot(trend.index, trend.values, lw=2.0, label=a)
+    summary.append((a, "all", len(df), mean_mcs))
+    # rolling median trend over time (aggregate over all data UEs)
+    ax.plot(df["time"], df["mcs"], alpha=0.08, lw=0.5, label=f"_{a} raw")
+    trend = df.set_index("time")["mcs"].rolling(150, min_periods=1).median()
+    ax.plot(trend.index, trend.values, lw=2.0, label=f"{a} (mean {mean_mcs:.1f})")
 
 ax.axvspan(WIN[0], WIN[1], color="red", alpha=0.06, label="attack window")
 ax.set_xlabel("time (s)")
