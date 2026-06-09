@@ -5,6 +5,7 @@
 #include "ns3/mc-ue-net-device.h"
 #include "ns3/mmwave-ue-net-device.h"
 #include "ns3/lte-ue-rrc.h"
+#include "ns3/mmwave-spectrum-phy.h"
 #include "ns3/config.h"
 
 #include "../helper/command-line-helper.h"
@@ -80,6 +81,13 @@ ReactiveJammer::StartAttack() {
         "/NodeList/*/DeviceList/*/ComponentCarrierMap/*/MmWaveUePhy/DlSpectrumPhy/RxPacketTraceUe",
         MakeBoundCallback(&ReactiveJammer::DlRxTrampoline, Ptr<ReactiveJammer>(this)));
 
+    // Idealized reactive effect: corrupt the target UE's high-MCS downlink TBs so they
+    // NACK (the RF pulse below models the same event; this guarantees the effect reaches
+    // the link-adaptation loop despite the spectrum model's binary reception gating).
+    mmwave::MmWaveSpectrumPhy::s_reactiveTargetRnti = m_targetRnti;
+    mmwave::MmWaveSpectrumPhy::s_reactiveMcsThreshold = m_mcsThreshold;
+    mmwave::MmWaveSpectrumPhy::s_reactiveAttackActive = m_haveRnti;
+
     // Kick off the periodic reactive controller.
     Simulator::Schedule(m_tickInterval, &ReactiveJammer::Tick, this);
 
@@ -130,7 +138,9 @@ void
 ReactiveJammer::StopAttack() {
     AttackBase::StopAttack();
     m_reactiveActive = false;
+    mmwave::MmWaveSpectrumPhy::s_reactiveAttackActive = false;
     CMD_LOG_WARN("Stopped Reactive Jamming Attack. pulses=" << m_pulses
+                 << " corruptedTBs=" << mmwave::MmWaveSpectrumPhy::s_reactiveCorrupted
                  << " jamTime=" << m_totalJamTime.GetSeconds() << "s observations=" << m_observations);
     if (m_log.is_open()) {
         m_log << "# summary pulses=" << m_pulses

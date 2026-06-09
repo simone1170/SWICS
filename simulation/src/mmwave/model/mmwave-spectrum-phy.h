@@ -166,6 +166,17 @@ class MmWaveSpectrumPhy : public SpectrumPhy
     static TypeId GetTypeId(void);
     virtual void DoDispose() override;
 
+    /// \brief Idealized reactive MCS-downgrade jammer state (set by the ReactiveJammer
+    /// attack). When active, a downlink TB to the target RNTI whose commanded MCS is at
+    /// or above the threshold is forced to fail decoding (as if a perfectly-timed pulse
+    /// corrupted that high-rate TB), producing a HARQ NACK that OLLA turns into a
+    /// downgrade. This models the attacker's *effect* without depending on the spectrum
+    /// model's binary reception gating (see the PHY-feedback fidelity discussion).
+    static bool s_reactiveAttackActive;   //!< whether an idealized reactive attack is on
+    static uint16_t s_reactiveTargetRnti; //!< RNTI whose high-MCS TBs are corrupted
+    static uint8_t s_reactiveMcsThreshold; //!< corrupt the target's TBs with MCS >= this
+    static uint64_t s_reactiveCorrupted;  //!< diagnostics: count of TBs corrupted by the attack
+
     void Reset();
     void ResetSpectrumModel();
 

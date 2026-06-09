@@ -70,6 +70,12 @@ namespace mmwave
 
 NS_OBJECT_ENSURE_REGISTERED(MmWaveSpectrumPhy);
 
+// Idealized reactive MCS-downgrade jammer state (set by the ReactiveJammer attack).
+bool MmWaveSpectrumPhy::s_reactiveAttackActive = false;
+uint16_t MmWaveSpectrumPhy::s_reactiveTargetRnti = 0;
+uint8_t MmWaveSpectrumPhy::s_reactiveMcsThreshold = 0;
+uint64_t MmWaveSpectrumPhy::s_reactiveCorrupted = 0;
+
 MmWaveSpectrumPhy::MmWaveSpectrumPhy()
     : m_cellId(0),
       m_state(IDLE),
@@ -623,6 +629,19 @@ MmWaveSpectrumPhy::EndRxData()
                                              harqInfoList);
             itTb->second.m_isCorrupted =
                 m_random->GetValue() > itTb->second.m_outputOfEM->m_tbler ? false : true;
+
+            // Idealized reactive MCS-downgrade attack: while active, force a downlink TB
+            // to the target UE with commanded MCS >= threshold to fail decoding. This is
+            // the attacker's effect (a perfectly-timed pulse corrupting the high-rate TB),
+            // which yields a HARQ NACK -> OLLA lowers the MCS until it falls below the
+            // threshold, at which point the TB survives and the downgrade stabilizes.
+            if (s_reactiveAttackActive && itTb->second.m_expected.m_isDownlink &&
+                itTb->first == s_reactiveTargetRnti &&
+                itTb->second.m_expected.m_mcs >= s_reactiveMcsThreshold)
+            {
+                itTb->second.m_isCorrupted = true;
+                s_reactiveCorrupted++;
+            }
 
             if (itTb->second.m_isCorrupted)
             {
