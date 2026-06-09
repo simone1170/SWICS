@@ -133,6 +133,13 @@ int main(int argc, char *argv[]) {
         CMD_LOG_INFO("Using 5G communication...");
 
         // Create and configure the mmWave helper
+        // Phase 1 (MCS instrumentation): route the per-TB PHY Rx trace (which carries
+        // mcs, rnti, SINR, corrupt/NACK and TBler) into this run's output directory so
+        // we obtain per-UE MCS over time. This must be set BEFORE the MmWaveHelper is
+        // created, because the helper constructs its MmWavePhyTrace (and latches this
+        // filename default into a static member) at construction time.
+        Config::SetDefault("ns3::MmWavePhyTrace::OutputFilename",
+                           StringValue(testbed->GetLogPath() + "rx-packet-trace.tsv"));
         mmwaveHelper = CreateObject<MmWaveHelper>();
         mmwaveHelper->SetPathlossModelType ("ns3::ThreeGppIndoorOfficePropagationLossModel");
         mmwaveHelper->SetChannelConditionModelType ("ns3::ThreeGppIndoorOpenOfficeChannelConditionModel");
@@ -216,6 +223,11 @@ int main(int argc, char *argv[]) {
         enbDevices = mmwaveHelper->InstallEnbDevice(enbNodes);
         ueDevices = mmwaveHelper->InstallUeDevice(ueNodes);
         devices.Add(ueDevices);
+
+        // Phase 1 (MCS instrumentation): connect the PHY Rx traces (DL received at the
+        // UE, UL received at the gNB). This populates rx-packet-trace.tsv with one row
+        // per transport block: time, rnti, mcs, SINR(dB), corrupt (=NACK) and TBler.
+        mmwaveHelper->EnableTraces();
 
         // Install internet stack on all nodes
         internet.Install(ueNodes);
