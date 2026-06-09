@@ -120,6 +120,7 @@ struct PhyTransmissionTraceParams
           m_numSym(0),
           m_ttiType(0),
           m_rv(0),
+          m_mcs(0),
           m_ccId(0)
     {
     }
@@ -133,6 +134,7 @@ struct PhyTransmissionTraceParams
     uint8_t m_numSym;    //!< Amount of OFDM symbols of current transmission
     uint8_t m_ttiType;   //!< TDD transmission type. Either DATA or CTRL.
     uint8_t m_rv;        //!< (Re)TX number. If 0 the TTI refers to new data, otherwise to a retx.
+    uint8_t m_mcs;       //!< commanded (AMC/CQI-derived) MCS for this allocation
     uint8_t m_ccId;      //!< The Component Carrier (CC) ID
 };
 

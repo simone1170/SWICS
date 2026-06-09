@@ -44,6 +44,7 @@
 #include "attacks/mitm.h"
 #include "attacks/suppression.h"
 #include "attacks/jammer.h"
+#include "attacks/reactive-jammer.h"
 #include "attacks/pgw-flooding.h"
 #include "attacks/forced-handover.h"
 #include "attacks/multi-injection.h"
@@ -140,6 +141,12 @@ int main(int argc, char *argv[]) {
         // filename default into a static member) at construction time.
         Config::SetDefault("ns3::MmWavePhyTrace::OutputFilename",
                            StringValue(testbed->GetLogPath() + "rx-packet-trace.tsv"));
+        // gNB-side DL transmission trace: logs the COMMANDED (AMC/CQI-derived) MCS per
+        // DL allocation, independent of whether the UE decodes it. This is the true
+        // link-adaptation signal for the MCS-downgrade attack (the UE Rx trace only
+        // sees surviving TBs and is biased high under jamming).
+        Config::SetDefault("ns3::MmWavePhyTrace::DlPhyTransmissionFilename",
+                           StringValue(testbed->GetLogPath() + "dl-phy-trace.tsv"));
         mmwaveHelper = CreateObject<MmWaveHelper>();
         mmwaveHelper->SetPathlossModelType ("ns3::ThreeGppIndoorOfficePropagationLossModel");
         mmwaveHelper->SetChannelConditionModelType ("ns3::ThreeGppIndoorOpenOfficeChannelConditionModel");
@@ -440,6 +447,7 @@ int main(int argc, char *argv[]) {
     }
     NodeContainer jammerContainer;
     Ptr<Jammer> jammer;
+    Ptr<ReactiveJammer> reactiveJammer;
 
     Ptr<SpectrumAnalysis> spectrumAnalysisAttack;
     NodeContainer analyzerContainer;
@@ -517,6 +525,25 @@ int main(int argc, char *argv[]) {
                 }
                 Simulator::Schedule(attackStart, &Jammer::StartAttack, jammer);
                 Simulator::Schedule(attackEnd, &Jammer::StopAttack, jammer);
+            }
+        } else if (attack.GetAttackIdentifier() == "ReactiveJammer") {
+            if (!testbed->Using5G()) {
+                CMD_LOG_ERROR("Scheduled reactive jammer attack in wired setting. Skipping attack...");
+            } else {
+                if (!initializedJammer) {
+                    // MCS-aware reactive jammer. Threshold/pulse parameters are fixed
+                    // here for now; they can be promoted to command-line options to
+                    // sweep them in experiments.
+                    reactiveJammer = CreateObject<ReactiveJammer>(testbed, plcB, *plcB,
+                        &jammerContainer, jammerPosition, centerFrequency, bandwidth,
+                        testbed->GetJammPower(),
+                        /*mcsThreshold*/ 10,
+                        /*pulseDuration*/ MicroSeconds(500),
+                        /*minGap*/ MicroSeconds(250));
+                    initializedJammer = true;
+                }
+                Simulator::Schedule(attackStart, &ReactiveJammer::StartAttack, reactiveJammer);
+                Simulator::Schedule(attackEnd, &ReactiveJammer::StopAttack, reactiveJammer);
             }
         } else if (attack.GetAttackIdentifier() == "SpectrumAnalysis") {
             Ptr<NetDevice> analyzerNetDevice = ueNodes.Get(0)->GetDevice(0);

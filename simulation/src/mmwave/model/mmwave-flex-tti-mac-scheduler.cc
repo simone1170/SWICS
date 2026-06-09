@@ -36,6 +36,7 @@
 #include <ns3/log.h>
 #include <ns3/lte-common.h>
 
+#include <algorithm>
 #include <cmath>
 #include <stdlib.h> /* abs */
 
@@ -249,6 +250,33 @@ MmWaveFlexTtiMacScheduler::GetTypeId(void)
                           BooleanValue(false),
                           MakeBooleanAccessor(&MmWaveFlexTtiMacScheduler::m_fixedMcsDl),
                           MakeBooleanChecker())
+            .AddAttribute("UseOlla",
+                          "Enable outer-loop link adaptation: adjust the CQI-derived DL "
+                          "MCS by a per-UE offset that decreases on HARQ NACK and increases "
+                          "on ACK, converging to OllaTargetBler.",
+                          BooleanValue(false),
+                          MakeBooleanAccessor(&MmWaveFlexTtiMacScheduler::m_useOlla),
+                          MakeBooleanChecker())
+            .AddAttribute("OllaStep",
+                          "OLLA MCS-index decrement applied on each DL HARQ NACK.",
+                          DoubleValue(0.1),
+                          MakeDoubleAccessor(&MmWaveFlexTtiMacScheduler::m_ollaStep),
+                          MakeDoubleChecker<double>())
+            .AddAttribute("OllaTargetBler",
+                          "OLLA target BLER; the ACK step is OllaStep*B/(1-B).",
+                          DoubleValue(0.1),
+                          MakeDoubleAccessor(&MmWaveFlexTtiMacScheduler::m_ollaTargetBler),
+                          MakeDoubleChecker<double>(0.0, 0.5))
+            .AddAttribute("OllaMaxOffset",
+                          "OLLA offset upper clamp (MCS-index units).",
+                          DoubleValue(2.0),
+                          MakeDoubleAccessor(&MmWaveFlexTtiMacScheduler::m_ollaMaxOffset),
+                          MakeDoubleChecker<double>())
+            .AddAttribute("OllaMinOffset",
+                          "OLLA offset lower clamp (MCS-index units, negative).",
+                          DoubleValue(-20.0),
+                          MakeDoubleAccessor(&MmWaveFlexTtiMacScheduler::m_ollaMinOffset),
+                          MakeDoubleChecker<double>())
             .AddAttribute("McsDefaultDl",
                           "Fixed DL MCS (for testing)",
                           UintegerValue(1),
@@ -784,6 +812,33 @@ MmWaveFlexTtiMacScheduler::DoSchedTriggerReq(
             }
             uint8_t harqId = m_dlHarqInfoList.at(i).m_harqProcessId;
             uint16_t rnti = m_dlHarqInfoList.at(i).m_rnti;
+
+            // OLLA: update this UE's MCS offset from the DL HARQ outcome. NACK pushes the
+            // offset down by OllaStep; ACK pushes it up by OllaStep*B/(1-B) so the loop
+            // settles at the target BLER. This is what lets selective high-MCS jamming
+            // (which produces NACKs) drive the commanded MCS down.
+            if (m_useOlla)
+            {
+                double ackStep = m_ollaStep * m_ollaTargetBler / (1.0 - m_ollaTargetBler);
+                double& off = m_ollaOffsetDl[rnti];
+                if (m_dlHarqInfoList.at(i).m_harqStatus == DlHarqInfo::ACK)
+                {
+                    off = std::min(m_ollaMaxOffset, off + ackStep);
+                    m_ollaAckCount++;
+                }
+                else if (m_dlHarqInfoList.at(i).m_harqStatus == DlHarqInfo::NACK)
+                {
+                    off = std::max(m_ollaMinOffset, off - m_ollaStep);
+                    m_ollaNackCount++;
+                }
+                if ((m_ollaAckCount + m_ollaNackCount) % 500 == 0)
+                {
+                    NS_LOG_UNCOND("[OLLA] t=" << Simulator::Now().GetSeconds()
+                                  << " acks=" << m_ollaAckCount << " nacks=" << m_ollaNackCount
+                                  << " rnti=" << rnti << " offset=" << off);
+                }
+            }
+
             itUeInfo = ueInfo.find(rnti);
             std::map<uint16_t, UlHarqProcessesStatus_t>::iterator itStat =
                 m_dlHarqProcessesStatus.find(rnti);
@@ -1114,7 +1169,14 @@ MmWaveFlexTtiMacScheduler::DoSchedTriggerReq(
                     }
                     else
                     {
-                        itUeInfo->second.m_dlMcs = m_amc->GetMcsFromCqi(cqi); // get MCS
+                        int mcs = m_amc->GetMcsFromCqi(cqi); // CQI-derived MCS
+                        if (m_useOlla)
+                        {
+                            // Apply the outer-loop offset and clamp to the valid MCS range.
+                            mcs = (int)std::round(mcs + m_ollaOffsetDl[itRlcBuf->m_rnti]);
+                            mcs = std::max(0, std::min(28, mcs));
+                        }
+                        itUeInfo->second.m_dlMcs = (uint8_t)mcs;
                     }
 
                     // temporarily store the TX queue size

@@ -338,6 +338,20 @@ class MmWaveFlexTtiMacScheduler : public MmWaveMacScheduler
 
     bool m_fixedTti;      // one slot per TTI
     uint8_t m_symPerSlot; // symbols per slot
+
+    // Outer-Loop Link Adaptation (OLLA). Real 5G/NR link adaptation adjusts the
+    // CQI-derived MCS by a per-UE offset that decreases on HARQ NACK and increases on
+    // ACK, converging to a target BLER. The stock scheduler lacks this (MCS is pure
+    // CQI->MCS), so NACKs never lower the MCS. OLLA is required to study MCS-downgrade
+    // jamming. Disabled by default to preserve the original behaviour.
+    bool m_useOlla;                          // enable outer-loop link adaptation
+    double m_ollaStep;                       // MCS-index decrement applied per NACK
+    double m_ollaTargetBler;                 // target BLER (sets ACK step = step*B/(1-B))
+    double m_ollaMaxOffset;                  // clamp: max positive offset
+    double m_ollaMinOffset;                  // clamp: max negative offset
+    std::map<uint16_t, double> m_ollaOffsetDl; // per-UE DL OLLA offset (MCS-index units)
+    uint64_t m_ollaAckCount = 0;             // diagnostics: DL HARQ ACKs seen by OLLA
+    uint64_t m_ollaNackCount = 0;            // diagnostics: DL HARQ NACKs seen by OLLA
 };
 
 } // namespace mmwave

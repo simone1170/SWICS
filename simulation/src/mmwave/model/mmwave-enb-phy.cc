@@ -1412,6 +1412,7 @@ MmWaveEnbPhy::TraceDlPhyTransmission(DciInfoElementTdma dciInfo, uint8_t tddType
     dlPhyTraceInfo.m_ttiType = tddType;
     dlPhyTraceInfo.m_rnti = dciInfo.m_rnti;
     dlPhyTraceInfo.m_rv = dciInfo.m_rv;
+    dlPhyTraceInfo.m_mcs = dciInfo.m_mcs; // commanded (AMC/CQI-derived) MCS for this DL allocation
     dlPhyTraceInfo.m_ccId = m_componentCarrierId;
     m_dlPhyTrace(dlPhyTraceInfo);
 }

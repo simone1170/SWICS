@@ -227,15 +227,16 @@ MmWavePhyTrace::ReportDlPhyTransmissionCallback(Ptr<MmWavePhyTrace> phyStats,
             NS_FATAL_ERROR("Could not open tracefile");
         }
         m_dlPhyTraceFile
-            << "frame\tsubF\tslot\trnti\tfirstSym\tnumSym\ttype\ttddMode\tretxNum\tccId"
+            << "frame\tsubF\tslot\trnti\tfirstSym\tnumSym\ttype\ttddMode\tretxNum\tmcs\ttime\tccId"
             << std::endl;
     }
 
-    // Trace the DL PHY transmission info
+    // Trace the DL PHY transmission info (mcs = commanded AMC/CQI MCS for this allocation)
     m_dlPhyTraceFile << +param.m_frameNum << "\t" << +param.m_sfNum << "\t" << +param.m_slotNum
                      << "\t" << +param.m_rnti << "\t" << +param.m_symStart << "\t"
                      << +param.m_numSym << "\t" << +param.m_ttiType << "\t" << +param.m_tddMode
-                     << "\t" << +param.m_rv << "\t" << +param.m_ccId << std::endl;
+                     << "\t" << +param.m_rv << "\t" << +param.m_mcs << "\t"
+                     << Simulator::Now().GetSeconds() << "\t" << +param.m_ccId << std::endl;
 }
 
 void
