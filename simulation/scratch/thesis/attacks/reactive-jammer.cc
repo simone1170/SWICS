@@ -7,12 +7,23 @@
 #include "ns3/lte-ue-rrc.h"
 #include "ns3/mmwave-spectrum-phy.h"
 #include "ns3/config.h"
+#include "ns3/global-value.h"
+#include "ns3/boolean.h"
 
 #include "../helper/command-line-helper.h"
 
 using namespace testbed;
 
 NS_LOG_COMPONENT_DEFINE("ReactiveJammer");
+
+// When true, the reactive jammer additionally applies the idealized reactive-effect in the
+// UE spectrum PHY (corrupt the target's high-MCS DL TBs -> NACK). Default false, so the
+// jammer relies only on its RF pulses (which the binary-gated spectrum model does not turn
+// into NACKs). Enable with --ReactiveIdealEffect=true to reproduce the working-attack result.
+static ns3::GlobalValue g_reactiveIdealEffect(
+    "ReactiveIdealEffect",
+    "Enable the idealized reactive MCS-downgrade effect (corrupt target high-MCS DL TBs).",
+    ns3::BooleanValue(false), ns3::MakeBooleanChecker());
 
 ReactiveJammer::ReactiveJammer(Ptr<TestbedHelper> testbed, Ptr<IndustrialDevice> device,
                                IndustrialDevice &target, NodeContainer *jammerContainer,
@@ -81,12 +92,16 @@ ReactiveJammer::StartAttack() {
         "/NodeList/*/DeviceList/*/ComponentCarrierMap/*/MmWaveUePhy/DlSpectrumPhy/RxPacketTraceUe",
         MakeBoundCallback(&ReactiveJammer::DlRxTrampoline, Ptr<ReactiveJammer>(this)));
 
-    // Idealized reactive effect: corrupt the target UE's high-MCS downlink TBs so they
-    // NACK (the RF pulse below models the same event; this guarantees the effect reaches
-    // the link-adaptation loop despite the spectrum model's binary reception gating).
+    // Idealized reactive effect (opt-in via --ReactiveIdealEffect=true): corrupt the target
+    // UE's high-MCS downlink TBs so they NACK. This guarantees the effect reaches the
+    // link-adaptation loop despite the spectrum model's binary reception gating. When
+    // disabled, the jammer relies only on its RF pulses (no downgrade in this model).
+    BooleanValue idealBv;
+    bool idealEffect = GlobalValue::GetValueByNameFailSafe("ReactiveIdealEffect", idealBv) &&
+                       idealBv.Get();
     mmwave::MmWaveSpectrumPhy::s_reactiveTargetRnti = m_targetRnti;
     mmwave::MmWaveSpectrumPhy::s_reactiveMcsThreshold = m_mcsThreshold;
-    mmwave::MmWaveSpectrumPhy::s_reactiveAttackActive = m_haveRnti;
+    mmwave::MmWaveSpectrumPhy::s_reactiveAttackActive = m_haveRnti && idealEffect;
 
     // Kick off the periodic reactive controller.
     Simulator::Schedule(m_tickInterval, &ReactiveJammer::Tick, this);
